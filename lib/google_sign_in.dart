@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:pantrypal/home_page.dart';
 
 class GoogleSignInPage extends StatefulWidget {
   const GoogleSignInPage({super.key});
@@ -12,23 +13,15 @@ class GoogleSignInPage extends StatefulWidget {
 class _GoogleSignInPageState extends State<GoogleSignInPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isSigningIn = false;
 
   // Method to handle Google Sign-In
   Future<void> _signInWithGoogle() async {
     try {
-      setState(() {
-        _isSigningIn = true;
-      });
-
       // Trigger the Google Sign-In process
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
         // If the user cancels the sign-in
-        setState(() {
-          _isSigningIn = false;
-        });
         return;
       }
 
@@ -44,70 +37,28 @@ class _GoogleSignInPageState extends State<GoogleSignInPage> {
       // Sign in to Firebase with the obtained credentials
       final UserCredential userCredential = await _auth.signInWithCredential(credential);
 
-      // Navigate to HomePage after successful sign-in
       if (userCredential.user != null) {
-        setState(() {
-          _isSigningIn = false;
-        });
+        // Navigate to the HomePage after successful sign-in
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(
+            builder: (context) => HomePage(userName: userCredential.user!.displayName ?? 'User'),
+          ),
         );
       }
     } catch (e) {
-      // Handle any errors during the sign-in process
-      setState(() {
-        _isSigningIn = false;
-      });
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Error'),
-          content: Text('An error occurred: $e'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ),
-      );
+      print("Error during Google Sign-In: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Google Sign-In Demo'),
-      ),
+      appBar: AppBar(title: const Text('Google Sign-In Demo')),
       body: Center(
-        child: _isSigningIn
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: _signInWithGoogle,
-                child: const Text('Sign In with Google'),
-              ),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-      ),
-      body: const Center(
-        child: Text(
-          'Welcome to the Home Page!',
-          style: TextStyle(fontSize: 24),
+        child: ElevatedButton(
+          onPressed: _signInWithGoogle,
+          child: const Text('Sign In with Google'),
         ),
       ),
     );
