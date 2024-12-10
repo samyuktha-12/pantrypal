@@ -97,6 +97,9 @@ flutter:
   - family: DancingScript
     fonts:
       - asset: assets/fonts/DancingScript-Regular.ttf
+  - family: Pacifico
+    fonts:
+      - asset: assets/fonts/Pacifico-Regular.ttf
 
   #
   # For details regarding fonts from package dependencies,

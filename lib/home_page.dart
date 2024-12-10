@@ -52,10 +52,37 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Text(
-          'Hello, $userName!',
-          style: const TextStyle(fontSize: 24),
+      body: Padding(
+        padding: const EdgeInsets.only(
+            top: 16.0), // Adjust padding to add space below AppBar
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align text to the left
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: 16.0, top: 10.0), // Space from left
+              child: Text(
+                'Hello!',
+                style: const TextStyle(
+                  fontSize: 24, // Professional font for the body
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Pacifico' // Medium weight for legibility
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0), // Space from left
+              child: Text(
+                '$userName',
+                style: const TextStyle(
+                    fontSize: 18, // Professional font for the body
+                    fontWeight: FontWeight.w300, // Medium weight for legibility
+                    ),
+              ),
+            ),
+            // Add more content here if needed
+          ],
         ),
       ),
       bottomNavigationBar: SizedBox(
