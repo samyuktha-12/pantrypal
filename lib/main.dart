@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Google Sign-In Demo',
+      title: 'PantryPal',
       theme: ThemeData.dark(),
       home: const GoogleSignInPage(),  // Starts with GoogleSignInPage
     );
