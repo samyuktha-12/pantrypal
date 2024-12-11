@@ -4,6 +4,9 @@ import 'package:firebase_vertexai/firebase_vertexai.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
+
 
 class MealPlanner extends StatefulWidget {
   const MealPlanner({super.key});
@@ -80,25 +83,67 @@ class _MealPlannerState extends State<MealPlanner> {
   }
 
   Future<void> _generatePdf(String response) async {
-    // If the response is empty, set it to "Empty"
-    if (response.isEmpty) {
-      response =
-          'Empty'; // Set response to "Empty" if no meal plan is available
-    }
-    String responseText = response.toString();
+  // If the response is empty, set it to "Empty"
+  if (response.isEmpty) {
+    response = 'Empty'; // Set response to "Empty" if no meal plan is available
+  }
 
-    final pdf = pw.Document();
+  // Debugging message to verify the content
+  print("Response to be rendered in PDF: $response");
+
+  // Load custom font
+  final ttf = await rootBundle.load('assets/fonts/NotoSans-Regular.ttf');
+
+  // Split the response by newline and filter out empty or whitespace-only lines
+  List<String> lines = response
+      .split('\n')
+      .where((line) => line.trim().isNotEmpty) // Remove empty lines or lines with only spaces
+      .toList();
+
+  // Handle any unexpected formatting in the response text
+  lines = lines.map((line) {
+    line = line.trim(); // Remove leading and trailing spaces
+    return line;
+  }).toList();
+
+  final pdf = pw.Document();
+  
+  // Define the maximum number of lines per page
+  const int maxLinesPerPage = 20;  // Adjust this based on your font size and layout
+  int currentLineIndex = 0;
+
+  while (currentLineIndex < lines.length) {
+    final linesOnCurrentPage = lines.sublist(currentLineIndex, 
+        currentLineIndex + maxLinesPerPage <= lines.length
+            ? currentLineIndex + maxLinesPerPage
+            : lines.length);
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
           return pw.Center(
             child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Meal Plan',
-                    style: pw.TextStyle(
-                        fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                pw.Center(
+                  child: pw.Text(
+                  'Meal Plan',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                    font: pw.Font.ttf(ttf), 
+                    // Apply custom bold font
+                  ),
+                )),
                 pw.SizedBox(height: 10),
-                pw.Text(responseText, style: pw.TextStyle(fontSize: 16, color: PdfColors.red)),
+                // Render each line separately
+                ...linesOnCurrentPage.map((line) => pw.Text(
+                      line,
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        font: pw.Font.ttf(ttf), // Apply custom regular font
+                      ),
+                    )),
               ],
             ),
           );
@@ -106,12 +151,18 @@ class _MealPlannerState extends State<MealPlanner> {
       ),
     );
 
-    // Debugging message to confirm that the PDF is generated and ready for download
-    print('PDF generated successfully, starting download...');
-
-    // Save the PDF and trigger the download
-    await Printing.layoutPdf(onLayout: (format) => pdf.save());
+    // Update the current line index to the next set of lines
+    currentLineIndex += maxLinesPerPage;
   }
+
+  // Debugging message to confirm that the PDF is generated and ready for download
+  print('PDF generated successfully, starting download...');
+
+  // Save the PDF and trigger the download
+  await Printing.layoutPdf(onLayout: (format) => pdf.save());
+}
+
+
 
   @override
   Widget build(BuildContext context) {
