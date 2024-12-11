@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "153285459861",
+    "firebase_url": "https://pantrypal-d1c01-default-rtdb.firebaseio.com",
     "project_id": "pantrypal-d1c01",
     "storage_bucket": "pantrypal-d1c01.firebasestorage.app"
   },
