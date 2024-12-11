@@ -1,0 +1,5 @@
+name,ingredients,totalTimeInMins,cuisine,instructions,url,imageUrl,ingredientCount
+"Vegetable Curry","onion, coriander powder, turmeric powder, ginger, garlic, tomato, potatoes",30,"Indian","Chop the vegetables, fry the spices, add water, and cook until done.","https://example.com/veg_curry","https://example.com/veg_curry_image.jpg",7
+"Spaghetti Aglio e Olio","spaghetti, garlic, olive oil, red pepper flakes, parsley",20,"Italian","Boil spaghetti, then sauté garlic in olive oil with red pepper flakes. Mix with spaghetti.","https://example.com/spaghetti_aglio_olio","https://example.com/spaghetti_aglio_olio_image.jpg",5
+"Tomato Soup","tomatoes, garlic, onion, vegetable broth, olive oil",25,"American","Sauté onions and garlic, add tomatoes and broth, then blend until smooth.","https://example.com/tomato_soup","https://example.com/tomato_soup_image.jpg",5
+"Fruit Salad","apple, banana, orange, grapes, honey",10,"American","Chop the fruits and mix together. Drizzle with honey for extra flavor.","https://example.com/fruit_salad","https://example.com/fruit_salad_image.jpg",5
