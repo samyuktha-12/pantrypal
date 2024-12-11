@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'fridge.dart';
 
 class HomePage extends StatelessWidget {
   final String userName;
@@ -114,6 +115,12 @@ class HomePage extends StatelessWidget {
                       color: Colors.white), // Fridge icon
                   onPressed: () {
                     // Fridge icon action
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Fridge(),
+                      ),
+                    );
                   },
                 ),
               ],
