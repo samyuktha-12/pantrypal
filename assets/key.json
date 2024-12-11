@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "pantrypal-444310",
+  "private_key_id": "9dcbedc2a82edf3bf2c446f1d5f0765a90d7caa7",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCv7ihWDBP0kohn\nnqZxxPkPdyS2S1uOQPOgmbFbJDbk8uUe/P18PWebWi9GPZ17Seo3vHH+VmZtlUVS\nWfiOaPM9f4IwWcxAjJFXx2xiVaTnxy7sReHNdNpD6Ulm5rIQ06obcbBVXWeaLzYL\nfopbO5QXA2pOZJIc/7J8PvVPTT+ntqIEIUcTyOYDL/of4LzT5lyoaUQ+462RbmVk\npwc+6zosiyMKDNibLItakVIHnyAua1NyQ653ELZxd3GQK7QrxBGKAMmqEXBgvnhd\npVsLDxgpaa7F6MKj9LpZdDCBZOWpi8DlmhwIdrtaHCUeZ12oA0AE6x8VFPfetPQq\n35HldWOtAgMBAAECggEAFkG34qLmh2NeVFWS0wPLSnSVNWa1L3ryF1g6QsCDHVXJ\nPLFe1C/kgpfXMTisSqOgOOrjNPzzOlvPCEsPkdyfISGXc8x4dZYS8RrukEYrdZMS\nUZvJpDdrQXoq6hS3ZD+S3qP0XehSKgRc/vlEQaR46Kxq733zqi2DBArm9+Ba9DmF\nyq2zH2guujLdzGQ8zhyjhoWHOfYrShntnEyF8VMXWmlUdbpPA/rddjAb39TcqVlE\n6dTpilM2nlDr1+PVEzRBgKOtPVxqiTyUNOUqsDzBELsQ8cPD0V2Nscd09d1ZlPF2\nWzGh9yWC0E2kYCNcCtY1UhmhNRHi7a8ujn0VFXL3lQKBgQDlmvz3ppAoOS/oqmNi\n+WaGZml1YDmrwKfzhYs2rCk7AsQNtCWKfyiE0Q0IATqR3YJdWlNsSdCkf8yInJPa\nFPZfP0MZU3vlpQz6in32sjLHJ27MLhQW6nPFTXL0CY+hRewRX6hozkT9cDuH3VBO\nvUq/NIPWY4lMOsuW8MPgY/xTkwKBgQDEJ5M53w4gjWbLq1Z4kLCiMcmIy4oCy5TF\n2Xwkn/DwgxVUSqvn7dPf+GinByRZBB8UkNuPPPF9gKwrxl5cO+Ba6efW5vmWC3m+\nvoRAZNuonwvohtOaXiiV9394BQX6Hwt/lQMr5qB3rKpXufNENEriryaOfAh5ileW\nTC6qO7hzvwKBgQCSCov+pXYp7332mnIO4R2CPR+05dio0yjAr1+GDelHvJGhOcVr\nG0hVena0cbukTeV+pVZMmYLZLuSUvCsa2px+pslyEXTL87iWn4JRaLT9kapaurBS\nhxvOEl4ctPwjk0r9HgALca/WGA31dCKBgstJZQi6U6Nf1kHqpwef8VjsewKBgBxd\ncK/MrplMeVH4a9+xZKl/s5oBfOqcj93wbkBJlKji+8GdrrAyNxJLNK76nGn265uo\nuudCs9UnNz55SAnkarQa4Pi1m9/ztt47ZJp/OzhuD2XHoW/QL+RHzvoHF+8scBg5\n7yR5DDliEZvv+tqhCTcwhs3R59PTiojkaVcanbi3AoGBANcV+I54c81xyigyVgKN\n72tYn5aLpKKjr6GXpxv11AZeP8td9LY25/3HUlvv0HQ97OqVJVMwYNTzBmxylr9v\nFNWVW/7I1rsHHiTrNmxRLe+pxe0zMZgLNkUIfviIyHIyNuOeAMj4KdmELsWETqtp\nk6c74/Fpfb1GUpGdcSqLIfTO\n-----END PRIVATE KEY-----\n",
+  "client_email": "pantrypalchat@pantrypal-444310.iam.gserviceaccount.com",
+  "client_id": "116298278905101586673",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pantrypalchat%40pantrypal-444310.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

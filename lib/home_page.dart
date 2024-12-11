@@ -5,6 +5,7 @@ import 'meal_planner.dart';
 import 'fridge.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'recipe_details_page.dart';
+import 'chatbot_screen.dart';
 
 // Define Recipe Model
 class Recipe {
@@ -234,89 +235,115 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 16.0, top: 10.0),
-              child: Text(
-                'Hello!',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Pacifico',
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 0.0, top: 10.0),
+                  child: Text(
+                    'Hello!',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pacifico',
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 16.0),
-              child: Text(
-                widget.userName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w300,
+                Padding(
+                  padding: const EdgeInsets.only(left: 0.0),
+                  child: Text(
+                    widget.userName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Recipes You Can Make:',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            // Display available recipes based on fridge ingredients
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // Two columns for recipes
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
+                SizedBox(height: 20),
+                Text(
+                  'Recipes Curated For You',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'DancingScript'),
                 ),
-                itemCount: availableRecipes.length,
-                itemBuilder: (context, index) {
-                  Recipe recipe = availableRecipes[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              RecipeDetailsPage(recipe: recipe.toMap()),
+                // Display available recipes based on fridge ingredients
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // Two columns for recipes
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                    ),
+                    itemCount: availableRecipes.length,
+                    itemBuilder: (context, index) {
+                      Recipe recipe = availableRecipes[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  RecipeDetailsPage(recipe: recipe.toMap()),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4.0,
+                          child: Column(
+                            children: [
+                              Image.network(
+                                recipe.imageUrl,
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  recipe.name,
+                                  style: TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 4.0,
-                      child: Column(
-                        children: [
-                          Image.network(
-                            recipe.imageUrl,
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              recipe.name,
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: GestureDetector(
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatScreen()),
+                );
+                // Trigger the chatbot action here (e.g., navigate to chatbot page)
+              },
+              child: CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.teal,
+                child: Icon(
+                  Icons.chat_bubble_outline,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: SizedBox(
         height: 60.0,
@@ -373,3 +400,4 @@ class _HomePageState extends State<HomePage> {
     }
   }
 }
+
