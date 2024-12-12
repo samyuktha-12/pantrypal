@@ -6,6 +6,7 @@ import 'fridge.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'recipe_details_page.dart';
 import 'chatbot_screen.dart';
+import 'recipe_generator.dart';
 
 // Define Recipe Model
 class Recipe {
@@ -59,94 +60,85 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     loadRecipes();
-    fetchFridgeIngredients(); // Load recipes on widget initialization
+    //fetchFridgeIngredients();
+    //getDishesThatCanBeMade(recipes, fridgeIngredients) // Load recipes on widget initialization
   }
 
-  // Function to load recipes from CSV
-  List<Recipe> loadRecipes() {
-    List<Recipe> loadedRecipes = [
-      Recipe(
-        name: "Vegetable Curry",
-        ingredients: ["onion", "coriander powder", "turmeric powder"],
-        totalTimeInMins: 30,
-        cuisine: "Indian",
-        instructions:
-            "Chop the vegetables, fry the spices, add water, and cook until done.",
-        url: "https://example.com/veg_curry",
-        imageUrl:
-            "https://images.immediate.co.uk/production/volatile/sites/30/2022/06/Courgette-curry-c295fa0.jpg?quality=90&webp=true&resize=600,545",
-        ingredientCount: 7,
-      ),
-      Recipe(
-        name: "Chickpea Salad",
-        ingredients: [
-          "chickpeas",
-          "tomato",
-          "cucumber",
-          "olive oil",
-          "lemon",
-          "coriander"
-        ],
-        totalTimeInMins: 15,
-        cuisine: "Mediterranean",
-        instructions:
-            "Mix all ingredients together in a bowl and toss with olive oil and lemon juice.",
-        url: "https://example.com/chickpea_salad",
-        imageUrl: "https://example.com/chickpea_salad_image.jpg",
-        ingredientCount: 6,
-      ),
-      Recipe(
-        name: "Spaghetti Aglio e Olio",
-        ingredients: [
-          "spaghetti",
-          "garlic",
-          "olive oil",
-          "red pepper flakes",
-          "parsley"
-        ],
-        totalTimeInMins: 20,
-        cuisine: "Italian",
-        instructions:
-            "Boil spaghetti, then sauté garlic in olive oil with red pepper flakes. Mix with spaghetti.",
-        url: "https://example.com/spaghetti_aglio_olio",
-        imageUrl: "https://example.com/spaghetti_aglio_olio_image.jpg",
-        ingredientCount: 5,
-      ),
-      Recipe(
-        name: "Tomato Soup",
-        ingredients: [
-          "tomatoes",
-          "garlic",
-          "onion",
-          "vegetable broth",
-          "olive oil"
-        ],
-        totalTimeInMins: 25,
-        cuisine: "American",
-        instructions:
-            "Sauté onions and garlic, add tomatoes and broth, then blend until smooth.",
-        url: "https://example.com/tomato_soup",
-        imageUrl: "https://example.com/tomato_soup_image.jpg",
-        ingredientCount: 5,
-      ),
-      Recipe(
-        name: "Fruit Salad",
-        ingredients: ["apple", "banana", "orange", "grapes", "honey"],
-        totalTimeInMins: 10,
-        cuisine: "American",
-        instructions:
-            "Chop the fruits and mix together. Drizzle with honey for extra flavor.",
-        url: "https://example.com/fruit_salad",
-        imageUrl: "https://example.com/fruit_salad_image.jpg",
-        ingredientCount: 5,
-      ),
-    ];
+  Future<List<Recipe>> loadRecipes() async {
+    List<Recipe> loadedRecipes = []; // Initialize an empty list
 
-    // Update the state with loaded recipes
-    setState(() {
-      recipes = loadedRecipes;
-    });
+    try {
+      // Fetch data from Firestore
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('recipes') // The Firestore collection name
+          .get();
 
+      // Debugging: Log the number of documents retrieved
+      print("Snapshot retrieved: ${snapshot.docs.length} documents.");
+
+      // Loop through the documents and map to Recipe objects
+      for (var doc in snapshot.docs) {
+        try {
+          // Safely parse document data
+          final data = doc.data() as Map<String, dynamic>;
+
+          // Create a Recipe object
+          Recipe recipe = Recipe(
+            name: doc.id ?? 'Unknown',
+            ingredients: (data['Cleaned-Ingredients'] as String?)
+                    ?.split(',')
+                    .map((e) => e.trim())
+                    .toList() ??
+                [], // Default to empty list
+            totalTimeInMins: data['TotalTimeInMins'] ?? 0,
+            cuisine: data['Cuisine'] ?? 'Unknown',
+            instructions:
+                data['TranslatedInstructions'] ?? 'No instructions available',
+            url: data['URL'] ?? '',
+            imageUrl: data['image-url'] ?? '',
+            ingredientCount:
+                (data['Cleaned-Ingredients'] as String?)?.split(',').length ??
+                    0, // Count the number of ingredients
+          );
+
+          // Add to the loadedRecipes list
+          loadedRecipes.add(recipe);
+          print("Recipe parsed: ${recipe.ingredients}");
+        } catch (e) {
+          // Handle individual document parsing errors
+          print("Error parsing document ${doc.id}: $e");
+        }
+      }
+
+      // Debugging: Print the top 5 recipes
+      print("Total loaded recipes: ${loadedRecipes.length}");
+
+      // Update state with loaded recipes
+      setState(() {
+        recipes = loadedRecipes;
+      });
+
+      QuerySnapshot fsnapshot =
+          await FirebaseFirestore.instance.collection('ingredients').get();
+
+      // Extract the ingredient names into a list
+      List<String> fridgeIngredients = fsnapshot.docs.map((doc) {
+        return doc['name'] as String;
+      }).toList();
+
+      // Filter recipes based on fridge ingredients
+      setState(() {
+        availableRecipes =
+            getDishesThatCanBeMade(loadedRecipes, fridgeIngredients);
+        print(availableRecipes);
+        isLoading = false;
+      });
+    } catch (e) {
+      // Handle Firestore errors
+      print("Error loading recipes from Firestore: $e");
+    }
+
+    // Return the list of loaded recipes
     return loadedRecipes;
   }
 
@@ -156,12 +148,13 @@ class _HomePageState extends State<HomePage> {
     return recipes.where((recipe) {
       // Check if all ingredients in the recipe are in the fridge
       return recipe.ingredients
-          .every((ingredient) => fridgeIngredients.contains(ingredient));
+          .any((ingredient) => fridgeIngredients.contains(ingredient));
     }).toList();
   }
 
   Future<void> fetchFridgeIngredients() async {
     try {
+      print("test");
       // Fetch data from Firestore
       QuerySnapshot snapshot =
           await FirebaseFirestore.instance.collection('ingredients').get();
@@ -174,6 +167,7 @@ class _HomePageState extends State<HomePage> {
       // Filter recipes based on fridge ingredients
       setState(() {
         availableRecipes = getDishesThatCanBeMade(recipes, fridgeIngredients);
+        print(availableRecipes);
         isLoading = false;
       });
     } catch (e) {
@@ -266,7 +260,10 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 20),
                 Text(
                   'Recipes Curated For You',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'DancingScript'),
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'DancingScript'),
                 ),
                 // Display available recipes based on fridge ingredients
                 Expanded(
@@ -296,19 +293,29 @@ class _HomePageState extends State<HomePage> {
                           elevation: 4.0,
                           child: Column(
                             children: [
-                              Image.network(
-                                recipe.imageUrl,
-                                height: 120,
+                              Container(
+                                height: 120, // Fixed height for the image
                                 width: double.infinity,
-                                fit: BoxFit.cover,
+                                child: Image.network(
+                                  recipe.imageUrl,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
+                              // Wrapping the text with Flexible to handle overflow
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  recipe.name,
-                                  style: TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
+                                child: Flexible(
+                                  // Allow text to resize without overflowing
+                                  child: Text(
+                                    recipe.name,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow
+                                        .ellipsis, // Handle text overflow
+                                  ),
                                 ),
                               ),
                             ],
@@ -326,7 +333,7 @@ class _HomePageState extends State<HomePage> {
             right: 20,
             child: GestureDetector(
               onTap: () {
-                 Navigator.push(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ChatScreen()),
                 );
@@ -378,6 +385,15 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                 ),
+                IconButton(
+                  icon: const Icon(Icons.restaurant, color: Colors.white),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RecipeGenerator()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -400,4 +416,3 @@ class _HomePageState extends State<HomePage> {
     }
   }
 }
-

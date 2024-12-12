@@ -56,7 +56,7 @@ class _MealPlannerState extends State<MealPlanner> {
   // Function to trigger chat and get a response from Vertex AI
   Future<void> _getChatResponse() async {
     final model =
-        FirebaseVertexAI.instance.generativeModel(model: 'gemini-1.5-flash');
+        FirebaseVertexAI.instance.generativeModel(model: 'gemini-2.0-flash-exp');
     final chat = model.startChat();
 
     final prompt =
