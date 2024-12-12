@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:firebase_vertexai/firebase_vertexai.dart'; // Import the AI API
 
-class Fridge extends StatelessWidget {
+class Fridge extends StatefulWidget {
   const Fridge({super.key});
+
+  @override
+  _FridgeState createState() => _FridgeState();
+}
+
+class _FridgeState extends State<Fridge> {
+  final ImagePicker _picker = ImagePicker();
+  String _response = '';
+  XFile? _image;
 
   // Function to fetch ingredients from Firestore
   Stream<List<Ingredient>> getIngredients() {
@@ -19,15 +32,74 @@ class Fridge extends StatelessWidget {
             .toList());
   }
 
+Future<void> processAndAddIngredientsToFirebase(String responseText) async {
+  try {
+    // Step 1: Parse the responseText into a list of ingredients
+    List<Map<String, dynamic>> ingredients =
+        _extractIngredientsFromText(responseText);
+
+    // Step 2: Add each ingredient to Firebase
+    for (var ingredient in ingredients) {
+      await FirebaseFirestore.instance.collection('ingredients').add({
+        'name': ingredient['name'],
+        'quantity': ingredient['quantity'],
+        'date': ingredient['date'],
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
+
+    print("Ingredients successfully added to Firebase.");
+  } catch (e) {
+    print("Error processing or adding ingredients to Firebase: $e");
+  }
+}
+
+// Helper function to parse raw text into a list of ingredient maps
+List<Map<String, dynamic>> _extractIngredientsFromText(String responseText) {
+  List<Map<String, dynamic>> ingredients = [];
+
+  // Split the responseText into lines
+  List<String> lines = responseText.split('\n');
+
+  // Loop through each line to extract ingredient details
+  for (var line in lines) {
+    line = line.trim();
+    if (line.isNotEmpty) {
+      try {
+        // Split the line into components and clean up the text
+        List<String> parts = line.split(',');
+        String name = parts[0].split(':').last.trim().replaceAll("'", "");
+        String quantity = parts[1].split(':').last.trim().replaceAll("'", "");
+        String date = parts[2].split(':').last.trim().replaceAll("'", "");
+
+        // Add the parsed ingredient to the list
+        ingredients.add({
+          'name': name,
+          'quantity': quantity,
+          'date': date,
+        });
+      } catch (e) {
+        print("Error parsing line: $line, Error: $e");
+      }
+    }
+  }
+
+  return ingredients;
+}
+
+
   // Function to delete an ingredient
   Future<void> _deleteIngredient(String id) async {
     await FirebaseFirestore.instance.collection('ingredients').doc(id).delete();
   }
 
   // Function to edit an ingredient
-  Future<void> _editIngredient(BuildContext context, id, String quantity, String date) async {
-    final TextEditingController _quantityController = TextEditingController(text: quantity);
-    final TextEditingController _dateController = TextEditingController(text: date);
+  Future<void> _editIngredient(
+      BuildContext context, id, String quantity, String date) async {
+    final TextEditingController _quantityController =
+        TextEditingController(text: quantity);
+    final TextEditingController _dateController =
+        TextEditingController(text: date);
 
     showDialog(
       context: context,
@@ -68,7 +140,10 @@ class Fridge extends StatelessWidget {
                 final String newDate = _dateController.text;
 
                 if (newQuantity.isNotEmpty && newDate.isNotEmpty) {
-                  await FirebaseFirestore.instance.collection('ingredients').doc(id).update({
+                  await FirebaseFirestore.instance
+                      .collection('ingredients')
+                      .doc(id)
+                      .update({
                     'quantity': newQuantity,
                     'date': newDate,
                   });
@@ -161,7 +236,8 @@ class Fridge extends StatelessWidget {
   }
 
   // Function to add ingredient to Firebase
-  Future<void> _addIngredientToFirebase(String name, String quantity, String date) async {
+  Future<void> _addIngredientToFirebase(
+      String name, String quantity, String date) async {
     try {
       await FirebaseFirestore.instance.collection('ingredients').add({
         'name': name,
@@ -174,11 +250,97 @@ class Fridge extends StatelessWidget {
     }
   }
 
+  // Function to extract ingredients from image
+  Future<void> _getRecipeFromImage() async {
+    if (_image == null) return;
+
+    try {
+      final model = FirebaseVertexAI.instance
+          .generativeModel(model: 'gemini-2.0-flash-exp');
+      final chat = model.startChat();
+
+      // Provide a text prompt to include with the image
+      final prompt = Content.text(
+          "I have an image of a bill for groceries. Please extract only the food ingredients and their quantities. If any quantity is not mentioned, assume 100g. For each ingredient, return the details in the following format:\nIngredient 1: 'ingredient_name', Quantity: quantity, Date: 'current_date'.\"\nThis format should ensure that the information extracted is neatly presented and easy to process.");
+
+      // Read image bytes
+      final imageBytes = await File(_image!.path).readAsBytes();
+      final imagePart = Content.inlineData('image/jpeg', imageBytes);
+
+      // To stream generated text output, call generateContentStream with the text and image
+      final response = await model.generateContentStream([
+        prompt, // Content.text already returns a Content object
+        imagePart // Content.inlineData already returns a Content object
+      ]);
+
+      await for (final chunk in response) {
+        if (chunk.text != null) {
+          setState(() {
+            _response += chunk.text!;
+            _response = _response
+                .replaceAll('###', '')
+                .replaceAll('**', '')
+                .replaceAll('##', '')
+                .replaceAll('*', '•');
+          });
+        }
+      }
+    } catch (e) {
+      print("Error processing the image: $e");
+    }
+  }
+
+  // Function to show scan dialog and upload image
+  Future<void> _scanImage() async {
+    // Pick an image from camera or gallery
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      setState(() {
+        _image = pickedImage;
+      });
+
+      // Process the image to get the recipe
+      await _getRecipeFromImage();
+      print(Text(_response));
+
+      // Show dialog to confirm the ingredients
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Confirm Ingredients'),
+            content: Text(_response), // Display extracted ingredients here
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // You can add the ingredients to Firebase here after confirmation
+                  final currentDate = DateTime.now().toIso8601String();
+                  //await _addIngredientToFirebase(
+                      //"Extracted Ingredient", "100g", currentDate);
+                    await processAndAddIngredientsToFirebase(_response);
+                  Navigator.pop(context);
+                },
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fridge', style: TextStyle(fontFamily: 'DancingScript', fontSize: 38.0)),
+        title: const Text('Fridge',
+            style: TextStyle(fontFamily: 'DancingScript', fontSize: 38.0)),
         backgroundColor: Colors.teal,
       ),
       body: StreamBuilder<List<Ingredient>>(
@@ -196,12 +358,7 @@ class Fridge extends StatelessWidget {
 
           return Padding(
             padding: const EdgeInsets.all(8.0),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10.0,
-                mainAxisSpacing: 10.0,
-              ),
+            child: ListView.builder(
               itemCount: ingredients.length,
               itemBuilder: (context, index) {
                 final ingredient = ingredients[index];
@@ -213,19 +370,47 @@ class Fridge extends StatelessWidget {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
-                    child: Column(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(ingredient.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Text('Quantity: ${ingredient.quantity}'),
-                        Text('Date: ${ingredient.date}'),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                ingredient.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                              Text(
+                                'Quantity: ${ingredient.quantity}',
+                                style: TextStyle(
+                                  fontSize: 12.0,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                'Date: ${ingredient.date}',
+                                style: TextStyle(
+                                  fontSize: 12.0,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.teal),
-                              onPressed: () => _editIngredient(context, ingredient.id, ingredient.quantity, ingredient.date),
+                              onPressed: () => _editIngredient(
+                                  context,
+                                  ingredient.id,
+                                  ingredient.quantity,
+                                  ingredient.date),
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
@@ -242,10 +427,21 @@ class Fridge extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddIngredientDialog(context),
-        backgroundColor: Colors.teal,
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () => _showAddIngredientDialog(context),
+            backgroundColor: Colors.teal,
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: _scanImage,
+            backgroundColor: Colors.teal,
+            child: const Icon(Icons.camera_alt),
+          ),
+        ],
       ),
     );
   }
