@@ -103,7 +103,6 @@ class _HomePageState extends State<HomePage> {
 
           // Add to the loadedRecipes list
           loadedRecipes.add(recipe);
-          print("Recipe parsed: ${recipe.ingredients}");
         } catch (e) {
           // Handle individual document parsing errors
           print("Error parsing document ${doc.id}: $e");
@@ -130,7 +129,6 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         availableRecipes =
             getDishesThatCanBeMade(loadedRecipes, fridgeIngredients);
-        print(availableRecipes);
         isLoading = false;
       });
     } catch (e) {
@@ -154,7 +152,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchFridgeIngredients() async {
     try {
-      print("test");
       // Fetch data from Firestore
       QuerySnapshot snapshot =
           await FirebaseFirestore.instance.collection('ingredients').get();
@@ -301,21 +298,18 @@ class _HomePageState extends State<HomePage> {
                                   fit: BoxFit.cover,
                                 ),
                               ),
-                              // Wrapping the text with Flexible to handle overflow
+                              // Wrapping the text with Padding instead of Expanded
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Flexible(
-                                  // Allow text to resize without overflowing
-                                  child: Text(
-                                    recipe.name,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow
-                                        .ellipsis, // Handle text overflow
+                                child: Text(
+                                  recipe.name,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow
+                                      .ellipsis, // Handle text overflow
                                 ),
                               ),
                             ],
@@ -390,7 +384,8 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RecipeGenerator()),
+                      MaterialPageRoute(
+                          builder: (context) => const RecipeGenerator()),
                     );
                   },
                 ),
