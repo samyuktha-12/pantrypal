@@ -8,11 +8,6 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _chatController = TextEditingController();
-  final _chatClient = ChatbotClient(
-    projectId: 'pantrypal-444310',
-    agentId: 'b516e3c2-ad9d-4cf4-8d25-9630bf824a81',
-    location: 'global',
-  );
 
   List<String> _messages = [];
 
